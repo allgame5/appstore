@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppStore</title>
+    <style>
+
+        #search-box {
+            margin-bottom: 20px;
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            border-radius: 30px;
+            border: 1px solid #ccc;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+
+        body {
+            font-family: 'San Francisco', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', sans-serif;
+            background: #f4f7fb;
+            margin: 0;
+            padding: 3px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .app-store {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .app {
+            width: 220px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .app:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .app img {
+            width: 100px;
+            height: 100px;
+            border-radius: 20%;
+            margin-bottom: 15px;
+        }
+
+        .app h3 {
+            font-size: 20px;
+            color: #333;
+            margin: 0;
+        }
+
+        .app-time {
+            font-size: 10px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .app p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .app button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            background: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .app button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .app button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        .app-window {
+            display: none;
+            position: fixed;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .app-window-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .app-window-header h2 {
+            font-size: 22px;
+            color: #333;
+            margin: 0;
+        }
+
+        .close-btn {
+            font-size: 22px;
+            color: #888;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+        }
+
+        .close-btn:hover {
+            color: #ff0000;
+        }
+
+        iframe {
+            width: 100%;
+            height: calc(100% - 60px);
+            border: none;
+        }
+
+        @media (max-width: 1024px) {
+            .app {
+                width: 45%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>AppStore</h1>
+
+    <input type="text" id="search-box" placeholder="Nach Apps suchen..." oninput="searchApps()">
+
+    <div class="app-store">
+        <div class="app" id="app1" data-version="12.0" data-url="https://example.com/cookie-clicker">
+            <img src="https://via.placeholder.com/100" alt="App 1">
+            <h3>Cookie Clicker</h3>
+            <p>Version: <span id="version-app1">1.0</span></p>
+            <button id="button-app1" onclick="downloadApp('app1', 3000, '1.0')">Herunterladen</button>
+        </div>
+        <div class="app" id="app2" data-version="2.0" data-url="https://example.com/rechen-trainer">
+            <img src="https://via.placeholder.com/100" alt="App 2">
+            <h3>Rechen Trainer</h3>
+            <p>Version: <span id="version-app2">1.0</span></p>
+            <button id="button-app2" onclick="downloadApp('app2', 5000, '1.0')">Herunterladen</button>
+        </div>
+        <div class="app" id="app3" data-version="1.0" data-url="https://example.com/puzzle-game">
+            <img src="https://via.placeholder.com/100" alt="App 3">
+            <h3>Puzzle Game</h3>
+            <p>Version: <span id="version-app3">1.0</span></p>
+            <button id="button-app3" onclick="downloadApp('app3', 7000, '1.0')">Herunterladen</button>
+        </div>
+        
+    </div>
+    <div id="app-window" class="app-window">
+        <div class="app-window-header">
+            <h2 id="app-title"></h2>
+            <button class="close-btn" onclick="closeAppWindow()">X</button>
+        </div>
+        <iframe id="app-iframe" src=""></iframe>
+    </div>
+</body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            checkDownloads();
+            setInterval(updateTime, 1000); // Update the time every second
+        });
+
+        function downloadApp(appId, waitTime, version) {
+            const button = document.getElementById("button-" + appId);
+            
+            button.innerText = "Lädt...";
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerText = "Öffnen";
+                button.disabled = false;
+                button.onclick = function() {
+                    openAppWindow(appId);
+                };
+                localStorage.setItem(appId, "downloaded");
+                localStorage.setItem(appId + "-version", version);
+            }, waitTime);
+        }
+
+        function checkDownloads() {
+            const apps = ["app1", "app2", "app3", "app4"];
+            apps.forEach(appId => {
+                const savedVersion = localStorage.getItem(appId + "-version");
+                const currentVersion = document.getElementById(appId).getAttribute("data-version");
+                const button = document.getElementById("button-" + appId);
+                
+                if (savedVersion === currentVersion) {
+                    if (localStorage.getItem(appId) === "downloaded") {
+                        button.innerText = "Öffnen";
+                        button.disabled = false;
+                        button.onclick = function() {
+                            openAppWindow(appId);
+                        };
+                    }
+                } else {
+                    button.innerText = "Update";
+                    button.disabled = false;
+                    button.onclick = function() {
+                        downloadApp(appId, 3000, currentVersion);
+                    };
+                }
+            });
+        }
+
+        function openAppWindow(appId) {
+            const appElement = document.getElementById(appId);
+            const appTitle = appElement.querySelector("h3").innerText;
+            const appUrl = appElement.getAttribute("data-url");
+
+            document.getElementById("app-title").innerText = appTitle;
+            document.getElementById("app-iframe").src = appUrl;
+            document.getElementById("app-window").style.display = "block";
+            updateTime();
+        }
+
+        function closeAppWindow() {
+            document.getElementById("app-window").style.display = "none";
+            document.getElementById("app-iframe").src = "";  // Stop loading the URL when the window is closed
+        }
+
+        function updateTime() {
+            document.getElementById("app-time").innerText = new Date().toLocaleTimeString();
+        }
+
+        function downloadApp(appId, waitTime, version) {
+            const button = document.getElementById("button-" + appId);
+            
+            button.innerText = "Lädt...";
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerText = "Öffnen";
+                button.disabled = false;
+                button.onclick = function() {
+                    openAppWindow(appId);
+                };
+                localStorage.setItem(appId, "downloaded");
+                localStorage.setItem(appId + "-version", version);
+            }, waitTime);
+        }
+
+        function checkDownloads() {
+            const apps = ["app1", "app2", "app3"];
+            apps.forEach(appId => {
+                const savedVersion = localStorage.getItem(appId + "-version");
+                const currentVersion = document.getElementById(appId).getAttribute("data-version");
+                const button = document.getElementById("button-" + appId);
+                
+                if (savedVersion === currentVersion) {
+                    if (localStorage.getItem(appId) === "downloaded") {
+                        button.innerText = "Öffnen";
+                        button.disabled = false;
+                        button.onclick = function() {
+                            openAppWindow(appId);
+                        };
+                    }
+                } else {
+                    button.innerText = "Update";
+                    button.disabled = false;
+                    button.onclick = function() {
+                        downloadApp(appId, 3000, currentVersion);
+                    };
+                }
+            });
+        }
+
+        function openAppWindow(appId) {
+            const appElement = document.getElementById(appId);
+            const appTitle = appElement.querySelector("h3").innerText;
+            const appUrl = appElement.getAttribute("data-url");
+
+            document.getElementById("app-title").innerText = appTitle;
+            document.getElementById("app-iframe").src = appUrl;
+            document.getElementById("app-window").style.display = "block";
+            updateTime();
+        }
+
+        function closeAppWindow() {
+            document.getElementById("app-window").style.display = "none";
+            document.getElementById("app-iframe").src = "";  // Stop loading the URL when the window is closed
+        }
+
+        function updateTime() {
+            document.getElementById("app-time").innerText = new Date().toLocaleTimeString();
+        }
+
+        function searchApps() {
+            const searchTerm = document.getElementById("search-box").value.toLowerCase();
+            const apps = document.querySelectorAll(".app");
+            
+            apps.forEach(app => {
+                const appName = app.querySelector("h3").innerText.toLowerCase();
+                if (appName.includes(searchTerm)) {
+                    app.style.display = "block";
+                } else {
+                    app.style.display = "none";
+                }
+            });
+        }
+    </script>
+</html>
